@@ -405,6 +405,8 @@ class Simulator:
                         dq=state['dq'],
                         desired=state['desired'],
                         t=t
+                        
+
                     )
                 else:
                     tau = self.controller(

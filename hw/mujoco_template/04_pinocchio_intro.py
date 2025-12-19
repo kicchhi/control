@@ -24,6 +24,7 @@ Notes:
     - This script requires proper installation of Pinocchio and its dependencies
 """
 
+
 import numpy as np
 import pinocchio as pin
 import os
@@ -123,3 +124,21 @@ print(f"\nGeometric Jacobian (Local):\n{J}")
 print(f"\nDesired Twist: {desired_twist}")
 print(f"\nQuaternion: {pos_quat[3:]}")
 print(f"\nLogarithm of Rotation Matrix:\n{log_R}")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
