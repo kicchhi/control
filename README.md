@@ -64,3 +64,10 @@ Definitely helpful:
 
 Solid knowledge of vector and matrix operations is required, as well as that of
 mechanics (kinematics, dynamics, concept of mechanical energy). 
+
+
+### Команды терминала
+Открываем Anaconda Prompt. Оттуда идет запуск всех команд.
+
+`conda activate robot_env` - активируем виртуальное окружение
+`cd: "путь к файлу"` - путь к папке
