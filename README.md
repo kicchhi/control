@@ -70,4 +70,5 @@ mechanics (kinematics, dynamics, concept of mechanical energy).
 Открываем Anaconda Prompt. Оттуда идет запуск всех команд.
 
 `conda activate robot_env` - активируем виртуальное окружение
+
 `cd: "путь к файлу"` - путь к папке
