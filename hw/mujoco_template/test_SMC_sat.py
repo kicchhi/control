@@ -129,17 +129,21 @@ def joint_controller(q: np.ndarray, dq: np.ndarray, t: float, sim=None) -> np.nd
     
     # Ошибки
     e = q0 - q  # Ошибка положения
-    de = 0 - dq  # Ошибка скорости
+    de =  - dq  # Ошибка скорости
     
     # Скользящая поверхность: s = de + Λ·e
     s = de + Lambda @ e
     
     # Норма скользящей поверхности
     s_norm = np.linalg.norm(s)
-    
+    print(s_norm,"<<<<<<")
     # Разрывная компонента v_s
- 
-    v_s = rho @ s / s_norm
+    epsilon = 5
+    if s_norm > epsilon:
+        v_s = rho @ s / s_norm
+    else:
+        v_s = rho @ s / epsilon
+        print("Helloooooo")
     # Вспомогательный сигнал v
     v = Lambda @ e + v_s
     

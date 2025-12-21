@@ -81,7 +81,7 @@ def joint_controller(q: np.ndarray, dq: np.ndarray, t: float, sim=None) -> np.nd
 
     # PD control law
     u = kp * (q0 - q) - kd * dq
-    print(q,"<-----------")
+
     tau = M@u + nle
     #tau = kp * (q0 - q) - kd * dq
     return tau
@@ -93,12 +93,22 @@ def main():
     print("\nRunning real-time joint space control...")
     sim = Simulator(
         # xml_path="scene.xml",
-        xml_path="./robots/universal_robots_ur5e/scene.xml",
+        xml_path="./robots/universal_robots_ur5e/scene2.xml",
         record_video=True,
-        video_path="logs/videos/test_id.mp4",
+        video_path="logs/videos/test_SMC.mp4",
         width=1920,
         height=1080
     )
+    # Set joint damping coefficients
+    damping = np.array([0.5, 0.5, 0.5, 0.1, 0.1, 0.1])  # Nm/rad/s
+    sim.set_joint_damping(damping)
+
+    # Set joint friction coefficients
+    friction = np.array([1.5, 0.5, 0.5, 0.1, 0.1, 0.1])  # Nm
+    sim.set_joint_friction(friction)
+
+    # Modify end-effector mass
+    sim.modify_body_properties("end_effector", mass=4)
     sim.set_controller(joint_controller)
     sim.run(time_limit=10.0)
 
