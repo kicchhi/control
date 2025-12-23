@@ -20,6 +20,10 @@ conda install pinocchio -c conda-forge
 
 `git add .`
 
-`git commit`
+`git commit -m "Description"`
+
+`git pull origin main`
 
 `git push origin main`
+
+####  
