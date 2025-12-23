@@ -56,78 +56,20 @@ def joint_controller(q: np.ndarray, dq: np.ndarray, t: float, sim=None) -> np.nd
     model = pin.buildModelFromMJCF(xml_path)
     data = model.createData()
 
-    # =====================
-    # Dynamics Computations
-    # =====================
     # Compute all dynamics quantities at once
     pin.computeAllTerms(model, data, q, dq)
 
     # Mass matrix
     M = data.M
 
-    # Gravity terms
-    g = data.g
-
     # Nonlinear effects (Coriolis + gravity)
     nle = data.nle
-
-    # Control law
-    # K, s - 10,14 5,11 3,10
-    # K_diag = np.array([1000 for i in range(6)])
-    # K = np.diag(K_diag)
-    # K = np.array([[100,0,0,0,0,0],
-    #             [0,10,0,0,0,0],
-    #             [0,0,10,0,0,0],
-    #             [0,0,0,50,0,0],
-    #             [0,0,0,0,25,0],
-    #             [0,0,0,0,0,15]])
-    # Пусть матрица лямбда
-    # L_diag = np.array([1 for i in range(6)])  
-    # L = np.diag(L_diag)
-    # L = np.array([[1,0,0,0,0,0],
-    #               [0,1,0,0,0,0],
-    #               [0,0,1,0,0,0],
-    #               [0,0,0,1,0,0],
-    #               [0,0,0,0,1,0],
-    #               [0,0,0,0,0,1]])
-
-    # s = L@(q0-q)+dq
-    # print("s=----------->0",np.linalg.norm(s))
-    # tau = -M@L@dq + nle -K@np.sign(s)
-    #tau = kp * (q0 - q) - kd * dq
-    # k = 10^10
-    # M_inv = np.linalg.inv(M)
-    # sigma_max = np.linalg.norm(M_inv, ord=2)
-    # pho = k/sigma_max*M_inv
-    # s = -dq + L@(q0-q)
-    # vs = pho@s/np.linalg.norm(s)
-    # v = L@(-dq)+vs
-    # tau = M@v+nle
 
     print(q)
     # 1. Матрица Λ (положительно определенная)
     Lambda = np.diag([15 for i in range(6)])
     # Lambda = np.diag([2.0, 2.0, 1.5, 1.0, 1.0, 0.8])  # Гораздо меньше!
-    # k = 30.0 
-    
-    # 2. Параметры робастности
-    eta = 1.0  # Параметр скорости схождения
-    w_bound = 5.0  # Оценка верхней границы неопределенностей ‖w‖
-    
-    # 3. Вычисление k согласно условию: k > ‖w‖ + η
-    # k = w_bound + eta + 2.0  # Добавляем запас
-    # k = 800000*100 - работает
-    k = 100
-    # 4. Максимальное сингулярное число M⁻¹
-    M_inv = np.linalg.inv(M)
-    sigma_max = np.linalg.svd(M_inv, compute_uv=False)[0]  # Максимальное сингулярное число
-    
-    # 5. Вычисление ρ
-    
-    # =====================
-    # ВЫЧИСЛЕНИЕ УПРАВЛЕНИЯ
-    # =====================
-    
+
     # Ошибки
     e = q0 - q  # Ошибка положения
     de = dq_d - dq  # Ошибка скорости
@@ -138,18 +80,29 @@ def joint_controller(q: np.ndarray, dq: np.ndarray, t: float, sim=None) -> np.nd
     # Норма скользящей поверхности
     s_norm = np.linalg.norm(s)
     
-    # Разрывная компонента v_s
- 
-    # rho = 800.0
-
-    # 1 вариант:
-    # rho = (k / sigma_max) * M_inv
-    # v_s = rho @ s / s_norm
-
-    # 2 вариант
     K_robust = 80.0
-    v_s = (K_robust / s_norm) * s
+
+    epsilon = 1.0
+
+    if s_norm > epsilon:
+        v_s = (K_robust / s_norm ) * s
+    else:
+        v_s = (K_robust / epsilon) * s
+        print("Helloooooo")
     
+    # После вычисления v_s добавь:
+    if not hasattr(joint_controller, 'counter'):
+        joint_controller.counter = 0
+        joint_controller.in_boundary = 0
+
+    joint_controller.counter += 1
+    if s_norm <= epsilon:
+        joint_controller.in_boundary += 1
+
+    if joint_controller.counter % 100 == 0:
+        boundary_percent = (joint_controller.in_boundary / joint_controller.counter) * 100
+        print(f"В boundary layer: {boundary_percent:.1f}% времени")
+
     # Вспомогательный сигнал v
     v = ddq_d + Lambda @ de + v_s
     

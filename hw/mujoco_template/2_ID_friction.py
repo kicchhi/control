@@ -58,9 +58,6 @@ def joint_controller(q: np.ndarray, dq: np.ndarray, t: float, sim=None) -> np.nd
     print("\nRobot Model Info:")
     print(f"Number of DOF: {model.nq}")
 
-    # =====================
-    # Dynamics Computations
-    # =====================
     # Compute all dynamics quantities at once
     pin.computeAllTerms(model, data, q, dq)
 
@@ -69,6 +66,11 @@ def joint_controller(q: np.ndarray, dq: np.ndarray, t: float, sim=None) -> np.nd
     print("\nMass Matrix:")
     print(M)
 
+    # Gravity terms
+    g = data.g
+    print("\nGravity Forces:")
+    print(g)
+
     # Nonlinear effects (Coriolis + gravity)
     nle = data.nle
     print("\nNon-Linear Effects (Coriolis + Gravity):")
@@ -76,16 +78,8 @@ def joint_controller(q: np.ndarray, dq: np.ndarray, t: float, sim=None) -> np.nd
 
     # PD control law
     u = kp * (q0 - q) - kd * dq
-    print(q,"<-----------")
-    
+
     tau = M@u + nle
-    # Mddq + nle = M@u + nle
-    # M-1Mddq = M-1M@u
-    # ddq = u
-    # PD - регулятор
-    # tau = kp * (q0 - q) + kd * (v0-dq), q0, v0 - желаемые положение и скорость
-    # мы хотим прийти в нужное положение и остановиться, поэтому
-    # желаемая скорость равна нулю, поэтому пишем так!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     #tau = kp * (q0 - q) - kd * dq
     return tau
 
@@ -96,12 +90,23 @@ def main():
     print("\nRunning real-time joint space control...")
     sim = Simulator(
         # xml_path="scene.xml",
-        xml_path="./robots/universal_robots_ur5e/scene.xml",
+        xml_path="./robots/universal_robots_ur5e/scene2.xml",
         record_video=True,
-        video_path="logs/videos/test_id.mp4",
+        video_path="logs/videos/2_ID_friction.mp4",
         width=1920,
         height=1080
     )
+    
+    # Set joint damping coefficients
+    damping = np.array([0.5, 0.5, 0.5, 0.1, 0.1, 0.1])  # Nm/rad/s
+    sim.set_joint_damping(damping)
+
+    # Set joint friction coefficients
+    friction = np.array([1.5, 0.5, 0.5, 0.1, 0.1, 0.1])  # Nm
+    sim.set_joint_friction(friction)
+
+    # Modify end-effector mass
+    sim.modify_body_properties("end_effector", mass=4)
     sim.set_controller(joint_controller)
     sim.run(time_limit=10.0)
 
