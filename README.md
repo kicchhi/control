@@ -116,6 +116,8 @@ tau = M@u + nle
 
 Теперь модифицируем модель робота UR5, добавив дополнительную массу конечного эффектора, коэффициенты демпфирования соединений, и кулоновское трение.
 
+Для сохранения предыдущих параметров "идеального" манипулятора был создан новый ur5e2.xml.
+
 Сделать это можно в xml файле напрямую, либо написав несколько строчек кода:
 
 ```python
@@ -178,11 +180,13 @@ v_s = (K_robust / s_norm) * s
 
 Результат работы в видео `logs/videos/3_SMC.mp4`
 
-Можно заметить, что управление стало немного лучше, и робот старается приблизиться к конечной точке.
+Можно заметить, что управление стало немного лучше, и робот приближается к нужной точке, но слегка колеблется вокруг неё.
 
 ## 3. Boundary Layer Implementation
 
 `4_SMC_boundary_layer.py`
+
+Для того, чтобы убрать колебания, реализуем boundary layer. Регулируя параметр epsilon, можно настроить баланс между точностью конечного положения и дрожание  (chattering).
 
 Код реализует модифицированный SMC с boundary layer.
 
@@ -212,4 +216,3 @@ else:
 
 - [Lecture 4: Introduction to Nonlinear Control](https://github.com/simeon-ned/forc/blob/master/_sort/04_mech_feedback_linearization/04_feedback_linearization.pdf)
 - [Lecture 6: Uncertainty, Sliding Mode, and Robust Control](https://github.com/simeon-ned/forc/blob/master/_sort/06_sliding_robust/06_sliding_mode.pdf)
-- [f]()
