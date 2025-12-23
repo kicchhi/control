@@ -69,11 +69,6 @@ def joint_controller(q: np.ndarray, dq: np.ndarray, t: float, sim=None) -> np.nd
     print("\nMass Matrix:")
     print(M)
 
-    # Gravity terms
-    g = data.g
-    print("\nGravity Forces:")
-    print(g)
-
     # Nonlinear effects (Coriolis + gravity)
     nle = data.nle
     print("\nNon-Linear Effects (Coriolis + Gravity):")
@@ -82,7 +77,15 @@ def joint_controller(q: np.ndarray, dq: np.ndarray, t: float, sim=None) -> np.nd
     # PD control law
     u = kp * (q0 - q) - kd * dq
     print(q,"<-----------")
+    
     tau = M@u + nle
+    # Mddq + nle = M@u + nle
+    # M-1Mddq = M-1M@u
+    # ddq = u
+    # PD - регулятор
+    # tau = kp * (q0 - q) + kd * (v0-dq), q0, v0 - желаемые положение и скорость
+    # мы хотим прийти в нужное положение и остановиться, поэтому
+    # желаемая скорость равна нулю, поэтому пишем так!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     #tau = kp * (q0 - q) - kd * dq
     return tau
 

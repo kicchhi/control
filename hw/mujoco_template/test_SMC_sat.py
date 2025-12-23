@@ -28,6 +28,7 @@ import numpy as np
 import pinocchio as pin
 import os
 import mujoco
+
 def joint_controller(q: np.ndarray, dq: np.ndarray, t: float, sim=None) -> np.ndarray:
     """Joint space PD controller.
     
@@ -39,7 +40,6 @@ def joint_controller(q: np.ndarray, dq: np.ndarray, t: float, sim=None) -> np.nd
     Returns:
         tau: Joint torques command [Nm]
     """
-
   
     # Control gains tuned for UR5e
     kp = np.array([100, 100, 100, 100, 100, 100])
@@ -47,6 +47,8 @@ def joint_controller(q: np.ndarray, dq: np.ndarray, t: float, sim=None) -> np.nd
     
     # Target joint configuration
     q0 = np.array([-1.4, -1.3, 1, 0, 0, 0])
+    dq_d = np.zeros(6)    # Скорость цели = 0
+    ddq_d = np.zeros(6)   # Ускорение цели = 0
     
     # Load the robot model from scene XML
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -69,7 +71,6 @@ def joint_controller(q: np.ndarray, dq: np.ndarray, t: float, sim=None) -> np.nd
     # Nonlinear effects (Coriolis + gravity)
     nle = data.nle
 
-
     # Control law
     # K, s - 10,14 5,11 3,10
     # K_diag = np.array([1000 for i in range(6)])
@@ -89,7 +90,6 @@ def joint_controller(q: np.ndarray, dq: np.ndarray, t: float, sim=None) -> np.nd
     #               [0,0,0,1,0,0],
     #               [0,0,0,0,1,0],
     #               [0,0,0,0,0,1]])
-    
 
     # s = L@(q0-q)+dq
     # print("s=----------->0",np.linalg.norm(s))
@@ -107,6 +107,8 @@ def joint_controller(q: np.ndarray, dq: np.ndarray, t: float, sim=None) -> np.nd
     print(q)
     # 1. Матрица Λ (положительно определенная)
     Lambda = np.diag([15 for i in range(6)])
+    # Lambda = np.diag([2.0, 2.0, 1.5, 1.0, 1.0, 0.8])  # Гораздо меньше!
+    # k = 30.0 
     
     # 2. Параметры робастности
     eta = 1.0  # Параметр скорости схождения
@@ -115,13 +117,12 @@ def joint_controller(q: np.ndarray, dq: np.ndarray, t: float, sim=None) -> np.nd
     # 3. Вычисление k согласно условию: k > ‖w‖ + η
     # k = w_bound + eta + 2.0  # Добавляем запас
     # k = 800000*100 - работает
-    k = 10000
+    k = 100
     # 4. Максимальное сингулярное число M⁻¹
     M_inv = np.linalg.inv(M)
     sigma_max = np.linalg.svd(M_inv, compute_uv=False)[0]  # Максимальное сингулярное число
     
     # 5. Вычисление ρ
-    rho = k / sigma_max * M_inv
     
     # =====================
     # ВЫЧИСЛЕНИЕ УПРАВЛЕНИЯ
@@ -129,23 +130,38 @@ def joint_controller(q: np.ndarray, dq: np.ndarray, t: float, sim=None) -> np.nd
     
     # Ошибки
     e = q0 - q  # Ошибка положения
-    de =  - dq  # Ошибка скорости
+    de = dq_d - dq  # Ошибка скорости
     
     # Скользящая поверхность: s = de + Λ·e
     s = de + Lambda @ e
     
     # Норма скользящей поверхности
     s_norm = np.linalg.norm(s)
-    print(s_norm,"<<<<<<")
+    
     # Разрывная компонента v_s
+ 
+    # rho = 800.0
+
+    # 1 вариант:
+    # rho = (k / sigma_max) * M_inv
+    # v_s = rho @ s / s_norm
+
+    # 2 вариант
+    K_robust = 80.0
+    
+    # 
+
+    # v_s = (K_robust / s_norm) * s
+
     epsilon = 5
     if s_norm > epsilon:
-        v_s = rho @ s / s_norm
+        v_s = (K_robust / s_norm ) * s
     else:
-        v_s = rho @ s / epsilon
+        v_s = (K_robust / epsilon) * s
         print("Helloooooo")
+    
     # Вспомогательный сигнал v
-    v = Lambda @ e + v_s
+    v = ddq_d + Lambda @ de + v_s
     
     # Основное управление: u = M·v + Ĉ + ĝ
     tau = M @ v + nle

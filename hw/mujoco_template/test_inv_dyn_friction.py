@@ -99,6 +99,7 @@ def main():
         width=1920,
         height=1080
     )
+    
     # Set joint damping coefficients
     damping = np.array([0.5, 0.5, 0.5, 0.1, 0.1, 0.1])  # Nm/rad/s
     sim.set_joint_damping(damping)
