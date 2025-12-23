@@ -12,6 +12,9 @@ permalink: /
 
 `cd D:\control\forc\hw\mujoco_template` - путь к папке
 
+`conda install pinocchio -c conda-forge` - установка conda
+
+conda install pinocchio -c conda-forge
 
 #### Для быстрого коммита
 
