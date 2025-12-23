@@ -10,7 +10,7 @@ permalink: /
 
 `conda activate robot_env` - активируем виртуальное окружение
 
-`cd: "путь к файлу"` - путь к папке
+`cd D:\control\forc\hw\mujoco_template` - путь к папке
 
 
 #### Для быстрого коммита
